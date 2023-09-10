@@ -37,72 +37,81 @@ def next_card(db: Session, id: str):
     # increment the player index and card index.
 
     game_room = get_game_room_by_id(db, id)
-    print(0)
     # don't do anything if the game is over.
     if game_room.is_game_over:
         return game_room
-    print(1)
+
     # handle game over if we're at the last card of the last level
     if (
         game_room.curr_level == game_room.levels_cnt - 1
         and game_room.curr_card_idx == game_room.levels_card_cnt[game_room.curr_level]
     ):
         game_room.is_game_over = True
-        print(2)
         db.commit()
         db.refresh(game_room)
         return game_room
-    print(3)
+
     # if we're at the last card of a level,
     # go to the next level and reset the card index to 0.
     if game_room.curr_card_idx == game_room.levels_card_cnt[game_room.curr_level]:
         game_room.curr_level += 1
         game_room.curr_card_idx = 0
-        print(4)
         db.commit()
         db.refresh(game_room)
         return game_room
-    print(5)
+
     game_room.curr_card_idx += 1
-    print(6)
     if game_room.curr_card_idx != 0:
-        print(7)
         game_room.curr_player_idx = game_room.curr_card_idx % len(
             game_room.player_names
         )
-    print(8)
-    print(game_room.to_dict())
     try:
         db.commit()
     except Exception as e:
         print(e)
-    print(9)
+        db.rollback()
+
     db.refresh(game_room)
-    print(10)
+
     return game_room
 
 
 def prev_card(db: Session, id: str):
-    # handle going to prev card. but, if we're at the first card,
-    # go to the prev level and reset the card index to the last card.
-    # also decrement the player index but if the player index is
-    # less than 0, reset it to the last player.
-    # don't do anything if we're at the first level.
+    # handle going to prev card.
+    # decrement the player index and card index.
 
     game_room = get_game_room_by_id(db, id)
+    # don't do anything if the game is over.
+    if game_room.is_game_over:
+        return game_room
 
-    if game_room.curr_level == 0:
+    # handle going back to the first card of the first level
+    if game_room.curr_level == 0 and game_room.curr_card_idx == 0:
+        return game_room
+
+    # if we're at the first card of a level,
+    # go to the prev level and reset the card index to the last card of the prev level.
+    if game_room.curr_card_idx == 0:
+        game_room.curr_level -= 1
+        game_room.curr_card_idx = game_room.levels_card_cnt[game_room.curr_level]
+        db.commit()
+        db.refresh(game_room)
         return game_room
 
     game_room.curr_card_idx -= 1
-    game_room.curr_player_idx = game_room.curr_card_idx % len(game_room.player_names)
-    if game_room.curr_card_idx < 0:
-        game_room.curr_level -= 1
-        game_room.curr_card_idx = game_room.levels_card_cnt[game_room.curr_level] - 1
-        game_room.curr_player_idx = len(game_room.player_names) - 1
+    if game_room.curr_card_idx != 0:
+        game_room.curr_player_idx = game_room.curr_card_idx % len(
+            game_room.player_names
+        )
 
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        print(e)
+        db.rollback()
+
     db.refresh(game_room)
+
     return game_room
 
 

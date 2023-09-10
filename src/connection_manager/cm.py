@@ -33,7 +33,7 @@ class ConnectionManager:
         except Exception as e:
             print(e)
 
-    async def broadcast(self, room_id: str, res: str | bool | int):
+    async def broadcast(self, room_id: str, res):
         try:
             if room_id in self.active_connections:
                 for connection in self.active_connections[room_id]:
@@ -80,4 +80,9 @@ class ConnectionManager:
         game_room = repo.prev_card(db, room_id)
         if game_room in error_factory:
             return error_factory[game_room]
-        return {"type": "prev_card", "res": game_room}
+        game_room_copy = game_room.to_dict().copy()
+        game_room_copy["id"] = str(game_room_copy["id"])
+        return {
+            "type": "prev_card",
+            "res": json.dumps(game_room_copy, separators=(",", ":")),
+        }
