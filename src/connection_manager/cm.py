@@ -33,7 +33,7 @@ class ConnectionManager:
         except Exception as e:
             print(e)
 
-    async def broadcast(self, room_id: str, res):
+    async def broadcast(self, room_id: str, res: str | bool | int):
         try:
             if room_id in self.active_connections:
                 for connection in self.active_connections[room_id]:

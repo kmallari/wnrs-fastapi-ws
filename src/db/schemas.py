@@ -7,7 +7,7 @@ class GameRoomBase(BaseModel):
     id: uuid.UUID
     code: str
     deck_name: str
-    player_names: list[str]
+    player_names: list[str] | None
     curr_player_idx: int
     levels_card_cnt: list[int]
     curr_card_idx: int
